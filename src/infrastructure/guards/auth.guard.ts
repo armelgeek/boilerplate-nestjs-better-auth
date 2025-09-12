@@ -6,7 +6,7 @@ import {
   SetMetadata,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { AuthService } from '../../application/use-cases/auth.service';
+import { BetterAuthService } from '../auth/better-auth.service';
 
 export const IS_PUBLIC_KEY = 'isPublic';
 export const Public = () => SetMetadata(IS_PUBLIC_KEY, true);
@@ -15,7 +15,7 @@ export const Public = () => SetMetadata(IS_PUBLIC_KEY, true);
 export class AuthGuard implements CanActivate {
   constructor(
     private reflector: Reflector,
-    private authService: AuthService,
+    private betterAuthService: BetterAuthService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -29,30 +29,32 @@ export class AuthGuard implements CanActivate {
     }
 
     const request = context.switchToHttp().getRequest();
-    const sessionId = this.extractSessionFromRequest(request);
+    const sessionToken = this.extractSessionFromRequest(request);
 
-    if (!sessionId) {
+    if (!sessionToken) {
       throw new UnauthorizedException('No session token provided');
     }
 
     try {
-      const user = await this.authService.validateSession(sessionId);
-      if (!user) {
+      const sessionData = await this.betterAuthService.validateSession(sessionToken);
+      if (!sessionData) {
         throw new UnauthorizedException('Invalid session');
       }
 
       // Attach user to request for use in controllers
       request.user = {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        emailVerified: user.emailVerified,
-        image: user.image,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
+        id: sessionData.user.id,
+        email: sessionData.user.email,
+        name: sessionData.user.name,
+        emailVerified: sessionData.user.emailVerified,
+        image: sessionData.user.image,
+        createdAt: sessionData.user.createdAt,
+        updatedAt: sessionData.user.updatedAt,
       };
 
-      request.session = { id: sessionId };
+      request.session = { 
+        id: sessionData.session.id,
+      };
 
       return true;
     } catch (error) {
@@ -68,9 +70,9 @@ export class AuthGuard implements CanActivate {
     }
 
     // Try to get session from cookies
-    const sessionId = request.cookies?.['session-id'];
-    if (sessionId) {
-      return sessionId;
+    const sessionToken = request.cookies?.['better-auth.session_token'];
+    if (sessionToken) {
+      return sessionToken;
     }
 
     return undefined;
