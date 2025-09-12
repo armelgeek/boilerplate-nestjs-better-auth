@@ -1,3 +1,5 @@
+import * as bcrypt from 'bcrypt';
+
 export class IdGenerator {
   static generate(): string {
     return crypto.randomUUID();
@@ -34,16 +36,11 @@ export class DateUtils {
 
 export class PasswordUtils {
   static async hash(password: string): Promise<string> {
-    // This is a placeholder - in real implementation, use bcrypt or similar
-    const encoder = new TextEncoder();
-    const data = encoder.encode(password);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+    const saltRounds = 10;
+    return bcrypt.hash(password, saltRounds);
   }
 
   static async verify(password: string, hash: string): Promise<boolean> {
-    const passwordHash = await this.hash(password);
-    return passwordHash === hash;
+    return bcrypt.compare(password, hash);
   }
 }

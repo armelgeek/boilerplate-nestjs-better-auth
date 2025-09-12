@@ -6,8 +6,8 @@ import { AuthGuard } from '../guards/auth.guard';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthService } from '../../application/services/auth.service';
 import { UserService } from '../../application/services/user.service';
-import { InMemoryUserRepository } from '../repositories/in-memory-user.repository';
-import { BetterAuthAdapter } from '../auth/better-auth.adapter';
+import { DrizzleUserRepository } from '../repositories/drizzle-user.repository';
+import { DrizzleAuthRepository } from '../auth/drizzle-auth.repository';
 import { NestLoggerService } from '../services/logger.service';
 
 @Module({
@@ -15,20 +15,20 @@ import { NestLoggerService } from '../services/logger.service';
   providers: [
     Reflector,
     // Infrastructure adapters 
-    InMemoryUserRepository,
-    BetterAuthAdapter,
+    DrizzleUserRepository,
+    DrizzleAuthRepository,
     NestLoggerService,
     // Application services
     {
       provide: AuthService,
       useFactory: (authRepo, userRepo, logger) => 
         new AuthService(authRepo, userRepo, logger),
-      inject: [BetterAuthAdapter, InMemoryUserRepository, NestLoggerService],
+      inject: [DrizzleAuthRepository, DrizzleUserRepository, NestLoggerService],
     },
     {
       provide: UserService,
       useFactory: (userRepo, logger) => new UserService(userRepo, logger),
-      inject: [InMemoryUserRepository, NestLoggerService],
+      inject: [DrizzleUserRepository, NestLoggerService],
     },
     // Guards
     {
