@@ -1,6 +1,6 @@
-# NestJS + Better Auth Boilerplate with Hexagonal Architecture
+# NestJS + Drizzle ORM Boilerplate with Hexagonal Architecture
 
-A production-ready backend boilerplate that integrates **NestJS**, **Better Auth**, and **Hexagonal Architecture** (Ports & Adapters pattern) to provide a clean, maintainable, and testable foundation for authentication-enabled APIs.
+A production-ready backend boilerplate that integrates **NestJS**, **Drizzle ORM**, and **Hexagonal Architecture** (Ports & Adapters pattern) to provide a clean, maintainable, and testable foundation for authentication-enabled APIs.
 
 ## 🏗️ Architecture
 
@@ -16,7 +16,7 @@ src/
 │   ├── ports/              # Interfaces (inbound/outbound)
 │   └── use-cases/          # Application services
 ├── infrastructure/         # External adapters and frameworks
-│   ├── auth/              # Better Auth adapter
+│   ├── database/          # Drizzle ORM configuration and schemas
 │   ├── controllers/       # NestJS REST controllers
 │   ├── guards/            # Authentication guards
 │   ├── modules/           # NestJS modules
@@ -30,9 +30,10 @@ src/
 
 ## ✨ Features
 
-- **🔐 Authentication System**: Complete auth flow with Better Auth integration
+- **🔐 Authentication System**: Complete auth flow with session-based authentication
 - **🏛️ Hexagonal Architecture**: Clean separation of domain, application, and infrastructure layers
-- **🛡️ Protected Routes**: JWT-based authentication with guards
+- **🗄️ Drizzle ORM**: Type-safe database operations with SQLite
+- **🛡️ Protected Routes**: Session-based authentication with guards
 - **📝 API Documentation**: Auto-generated Swagger/OpenAPI docs
 - **🧪 Type Safety**: Full TypeScript support with strict typing
 - **🔧 Production Ready**: Error handling, logging, and validation
@@ -149,46 +150,79 @@ curl -X PUT "http://localhost:3000/users/profile" \
 - **Guards** for authentication and authorization
 - **External services** integration
 
-## 🔌 Better Auth Integration
+## 🔌 Drizzle ORM Integration
 
-This boilerplate now includes a fully functional [Better Auth](https://better-auth.com) integration that provides:
+This boilerplate includes a fully functional [Drizzle ORM](https://orm.drizzle.team) integration that provides:
 
-- **Email/Password Authentication**: Complete sign-up and sign-in functionality
-- **Session Management**: Secure session handling with automatic expiration
-- **Protected Routes**: JWT-based authentication with NestJS guards
-- **Type Safety**: Full TypeScript support with Better Auth types
-- **Testing**: Comprehensive test suite for authentication flows
+- **Type-Safe Database Operations**: Full TypeScript support with Drizzle ORM
+- **SQLite Database**: Simple setup with SQLite for development and production
+- **Schema Management**: Versioned database migrations
+- **Session Management**: Secure session handling with database persistence
+- **Password Security**: bcrypt hashing for secure password storage
 
-### Better Auth Features
+### Database Features
 
 The implementation includes:
 
-- **User Registration**: Email/password signup with validation
-- **User Login**: Secure authentication with session creation
-- **Session Validation**: Automatic session verification for protected routes
-- **User Logout**: Session termination and cleanup
-- **Profile Management**: Current user information retrieval
+- **User Management**: Complete user CRUD operations with proper relations
+- **Session Handling**: Database-backed session management with expiration
+- **Schema Migrations**: Drizzle Kit for managing database schema changes
+- **Type Safety**: Full TypeScript integration with database operations
 
 ### Technical Implementation
 
-The Better Auth integration follows the NestJS integration pattern:
+The Drizzle integration follows the repository pattern:
 
 ```typescript
-// Better Auth Service
+// Drizzle Repository
 @Injectable()
-export class BetterAuthService {
-  async signUp(email: string, password: string, name: string) {
-    return await mockBetterAuth.signUpEmail({ email, password, name });
+export class DrizzleAuthRepository implements AuthRepository {
+  async createUser(email: string, password: string, name: string) {
+    const hashedPassword = await PasswordUtils.hash(password);
+    
+    await db.insert(users).values({
+      id: userId,
+      email,
+      name,
+      password: hashedPassword,
+      emailVerified: false,
+    });
+
+    return user;
   }
 
-  async signIn(email: string, password: string) {
-    return await mockBetterAuth.signInEmail({ email, password });
-  }
-
-  async validateSession(sessionToken: string) {
+  async validateSession(sessionId: string) {
+    const sessionResult = await db.select()
+      .from(sessions)
+      .where(eq(sessions.id, sessionId))
+      .limit(1);
     // Returns user and session data for valid sessions
   }
 }
+```
+
+### Database Schema
+
+The database schema includes:
+
+```typescript
+export const users = sqliteTable('users', {
+  id: text('id').primaryKey(),
+  email: text('email').notNull().unique(),
+  name: text('name').notNull(),
+  password: text('password').notNull(),
+  emailVerified: integer('email_verified', { mode: 'boolean' }).default(false),
+  image: text('image'),
+  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: text('updated_at').default(sql`CURRENT_TIMESTAMP`),
+});
+
+export const sessions = sqliteTable('sessions', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  expiresAt: text('expires_at').notNull(),
+  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
+});
 ```
 
 ### Authentication Flow
@@ -201,39 +235,26 @@ export class BetterAuthService {
 
 ### Session Management
 
-Sessions are managed using HTTP-only cookies and Bearer tokens:
+Sessions are managed using HTTP-only cookies and Bearer tokens with database persistence:
 
 ```typescript
-// Session cookie set on login/register
-response.cookie('better-auth.session_token', session.id, {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
-  sameSite: 'strict',
-  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+// Session stored in database with Drizzle ORM
+await db.insert(sessions).values({
+  id: sessionId,
+  userId,
+  expiresAt: expiresAt.toISOString(),
+  createdAt: new Date().toISOString(),
 });
 ```
 
-### Production Configuration
+### Database Commands
 
-For production use, replace the demo implementation with proper Better Auth configuration:
+```bash
+# Generate database migrations
+npm run db:generate
 
-```typescript
-export const auth = betterAuth({
-  database: {
-    provider: 'pg', // or 'mysql', 'sqlite'
-    url: process.env.DATABASE_URL,
-  },
-  emailAndPassword: {
-    enabled: true,
-    requireEmailVerification: true,
-  },
-  socialProviders: {
-    google: {
-      clientId: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    },
-  },
-});
+# Apply migrations to create/update database
+npm run db:migrate
 ```
 
 ## 🧪 Testing
@@ -257,11 +278,13 @@ npm run test:cov
 - `npm run start:debug` - Start server in debug mode
 - `npm run lint` - Lint code with ESLint
 - `npm run format` - Format code with Prettier
+- `npm run db:generate` - Generate Drizzle database migrations
+- `npm run db:migrate` - Apply database migrations
 
 ## 🔒 Security Features
 
-- **Password hashing** with secure algorithms
-- **Session management** with expiration
+- **Password hashing** with bcrypt
+- **Session management** with database persistence and expiration
 - **Request validation** with class-validator
 - **Type-safe APIs** with TypeScript
 - **CORS protection** enabled
@@ -313,5 +336,5 @@ This project is licensed under the MIT License.
 ## 🙏 Acknowledgments
 
 - [NestJS](https://nestjs.com/) - Progressive Node.js framework
-- [Better Auth](https://better-auth.com/) - Modern authentication library
+- [Drizzle ORM](https://orm.drizzle.team/) - TypeScript ORM for SQL databases
 - [Hexagonal Architecture](https://alistair.cockburn.us/hexagonal-architecture/) - Architectural pattern by Alistair Cockburn
