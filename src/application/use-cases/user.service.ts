@@ -1,8 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { UserUseCases, GetUserQuery } from '../ports/inbound.ports';
-import { UserRepositoryPort, LoggerPort } from '../ports/outbound.ports';
+import { UserUseCases, GetUserQuery } from '../repositories/inbound.ports';
+import { UserRepositoryPort, LoggerPort } from '../repositories/outbound.ports';
 import { User } from '../../domain/entities/user.entity';
-import { UserIdVO } from '../../domain/value-objects/user-id.vo';
 import { UserDomainService } from '../../domain/services/user-domain.service';
 
 @Injectable()
@@ -20,8 +19,7 @@ export class UserService implements UserUseCases {
     this.logger.log(`Getting user: ${query.userId}`, 'UserService');
 
     try {
-      const userId = new UserIdVO(query.userId);
-      return await this.userRepository.findById(userId);
+      return await this.userRepository.findById(query.userId);
     } catch (error) {
       this.logger.error(
         `Failed to get user: ${query.userId}`,
@@ -40,8 +38,7 @@ export class UserService implements UserUseCases {
     this.logger.log(`Updating user profile: ${userId}`, 'UserService');
 
     try {
-      const userIdVO = new UserIdVO(userId);
-      const user = await this.userDomainService.validateUserExists(userIdVO);
+      const user = await this.userDomainService.validateUserExists(userId);
 
       const updatedUser = user.updateProfile(name, image);
       return await this.userRepository.save(updatedUser);

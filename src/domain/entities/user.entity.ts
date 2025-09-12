@@ -1,9 +1,6 @@
-import { UserId } from '../value-objects/user-id.vo';
-import { Email } from '../value-objects/email.vo';
-
 export interface UserProps {
-  id: UserId;
-  email: Email;
+  id: string;
+  email: string;
   name: string;
   createdAt: Date;
   updatedAt: Date;
@@ -27,11 +24,11 @@ export class User {
     return new User(props);
   }
 
-  get id(): UserId {
+  get id(): string {
     return this.props.id;
   }
 
-  get email(): Email {
+  get email(): string {
     return this.props.email;
   }
 
@@ -74,8 +71,8 @@ export class User {
 
   toPrimitives() {
     return {
-      id: this.props.id.value,
-      email: this.props.email.value,
+      id: this.props.id,
+      email: this.props.email,
       name: this.props.name,
       createdAt: this.props.createdAt,
       updatedAt: this.props.updatedAt,

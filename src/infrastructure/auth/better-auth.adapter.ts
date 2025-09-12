@@ -1,8 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { AuthRepository } from '../../application/ports/outbound.ports';
+import { AuthRepository } from '../../application/repositories/outbound.ports';
 import { User } from '../../domain/entities/user.entity';
-import { UserIdVO } from '../../domain/value-objects/user-id.vo';
-import { EmailVO } from '../../domain/value-objects/email.vo';
 import { IdGenerator, PasswordUtils } from '../../shared/utils/common.utils';
 
 // In-memory storage for demo purposes
@@ -31,12 +29,10 @@ export class BetterAuthAdapter implements AuthRepository {
       const hashedPassword = await PasswordUtils.hash(password);
 
       const userId = IdGenerator.generate();
-      const userIdVO = new UserIdVO(userId);
-      const emailVO = new EmailVO(email);
 
       const user = User.create({
-        id: userIdVO,
-        email: emailVO,
+        id: userId,
+        email,
         name,
         emailVerified: false,
       });
@@ -70,12 +66,9 @@ export class BetterAuthAdapter implements AuthRepository {
       }
 
       // Convert to domain entity
-      const userIdVO = new UserIdVO(userEntry.id);
-      const emailVO = new EmailVO(userEntry.email);
-
       return User.fromPersistence({
-        id: userIdVO,
-        email: emailVO,
+        id: userEntry.id,
+        email: userEntry.email,
         name: userEntry.name,
         createdAt: userEntry.createdAt,
         updatedAt: userEntry.updatedAt,
@@ -128,12 +121,9 @@ export class BetterAuthAdapter implements AuthRepository {
       }
 
       // Convert to domain entity
-      const userIdVO = new UserIdVO(userEntry.id);
-      const emailVO = new EmailVO(userEntry.email);
-
       return User.fromPersistence({
-        id: userIdVO,
-        email: emailVO,
+        id: userEntry.id,
+        email: userEntry.email,
         name: userEntry.name,
         createdAt: userEntry.createdAt,
         updatedAt: userEntry.updatedAt,

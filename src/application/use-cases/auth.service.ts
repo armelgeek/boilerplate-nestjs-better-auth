@@ -7,15 +7,13 @@ import {
   LogoutCommand,
   AuthResponse,
   RefreshResponse,
-} from '../ports/inbound.ports';
+} from '../repositories/inbound.ports';
 import {
   AuthRepository,
   UserRepositoryPort,
   LoggerPort,
-} from '../ports/outbound.ports';
+} from '../repositories/outbound.ports';
 import { User } from '../../domain/entities/user.entity';
-import { EmailVO } from '../../domain/value-objects/email.vo';
-import { UserIdVO } from '../../domain/value-objects/user-id.vo';
 import { UserDomainService } from '../../domain/services/user-domain.service';
 
 @Injectable()
@@ -43,10 +41,10 @@ export class AuthService implements AuthUseCases {
         throw new Error('Invalid credentials');
       }
 
-      const sessionId = await this.authRepository.createSession(user.id.value);
+      const sessionId = await this.authRepository.createSession(user.id);
 
       this.logger.log(
-        `Login successful for user: ${user.id.value}`,
+        `Login successful for user: ${user.id}`,
         'AuthService',
       );
 
@@ -71,10 +69,8 @@ export class AuthService implements AuthUseCases {
     );
 
     try {
-      const email = new EmailVO(command.email);
-
       const isEmailAvailable =
-        await this.userDomainService.isEmailAvailable(email);
+        await this.userDomainService.isEmailAvailable(command.email);
       if (!isEmailAvailable) {
         throw new Error('Email already exists');
       }
@@ -85,10 +81,10 @@ export class AuthService implements AuthUseCases {
         command.name,
       );
 
-      const sessionId = await this.authRepository.createSession(user.id.value);
+      const sessionId = await this.authRepository.createSession(user.id);
 
       this.logger.log(
-        `Registration successful for user: ${user.id.value}`,
+        `Registration successful for user: ${user.id}`,
         'AuthService',
       );
 

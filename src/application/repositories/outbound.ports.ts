@@ -1,6 +1,4 @@
 import { User } from '../../domain/entities/user.entity';
-import { Email } from '../../domain/value-objects/email.vo';
-import { UserId } from '../../domain/value-objects/user-id.vo';
 
 // Authentication repository port
 export interface AuthRepository {
@@ -14,10 +12,10 @@ export interface AuthRepository {
 
 // User repository port (re-export for application layer)
 export interface UserRepositoryPort {
-  findById(id: UserId): Promise<User | null>;
-  findByEmail(email: Email): Promise<User | null>;
+  findById(id: string): Promise<User | null>;
+  findByEmail(email: string): Promise<User | null>;
   save(user: User): Promise<User>;
-  delete(id: UserId): Promise<void>;
+  delete(id: string): Promise<void>;
 }
 
 // Email service port
