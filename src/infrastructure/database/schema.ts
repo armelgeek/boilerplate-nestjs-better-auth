@@ -1,22 +1,23 @@
-import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
+
+import { pgTable, text, integer, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 
-export const users = sqliteTable('users', {
-  id: text('id').primaryKey(),
+export const users = pgTable('users', {
+  id: uuid('id').primaryKey().defaultRandom(),
   email: text('email').notNull().unique(),
   name: text('name').notNull(),
   password: text('password').notNull(),
-  emailVerified: integer('email_verified', { mode: 'boolean' }).default(false),
+  emailVerified: integer('email_verified').default(sql`0`),
   image: text('image'),
-  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
-  updatedAt: text('updated_at').default(sql`CURRENT_TIMESTAMP`),
+  createdAt: timestamp('created_at', { mode: 'date' }).defaultNow(),
+  updatedAt: timestamp('updated_at', { mode: 'date' }).defaultNow(),
 });
 
-export const sessions = sqliteTable('sessions', {
-  id: text('id').primaryKey(),
-  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
-  expiresAt: text('expires_at').notNull(),
-  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
+export const sessions = pgTable('sessions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  expiresAt: timestamp('expires_at', { mode: 'date' }).notNull(),
+  createdAt: timestamp('created_at', { mode: 'date' }).defaultNow(),
 });
 
 export type User = typeof users.$inferSelect;

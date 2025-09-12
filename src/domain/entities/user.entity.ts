@@ -20,9 +20,6 @@ export class User {
     });
   }
 
-  static fromPersistence(props: UserProps): User {
-    return new User(props);
-  }
 
   get id(): string {
     return this.props.id;
@@ -59,25 +56,5 @@ export class User {
       image,
       updatedAt: new Date(),
     });
-  }
-
-  verifyEmail(): User {
-    return new User({
-      ...this.props,
-      emailVerified: true,
-      updatedAt: new Date(),
-    });
-  }
-
-  toPrimitives() {
-    return {
-      id: this.props.id,
-      email: this.props.email,
-      name: this.props.name,
-      createdAt: this.props.createdAt,
-      updatedAt: this.props.updatedAt,
-      emailVerified: this.props.emailVerified,
-      image: this.props.image,
-    };
   }
 }

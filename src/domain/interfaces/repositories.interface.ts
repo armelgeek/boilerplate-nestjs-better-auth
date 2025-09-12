@@ -1,6 +1,5 @@
 import { User } from '../entities/user.entity';
 
-// Core repository interfaces for the domain
 export interface UserRepository {
   findById(id: string): Promise<User | null>;
   findByEmail(email: string): Promise<User | null>;

@@ -37,7 +37,7 @@ export class UserController {
     }
 
     return {
-      user: user.toPrimitives(),
+      user: null,
     };
   }
 
@@ -64,7 +64,7 @@ export class UserController {
 
     return {
       message: 'Profile updated successfully',
-      user: updatedUser.toPrimitives(),
+      user: null,
     };
   }
 }

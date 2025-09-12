@@ -19,7 +19,6 @@ import {
 import { Response } from 'express';
 import { AuthService } from '../../application/services/auth.service';
 import { LoginDto, RegisterDto, RefreshTokenDto } from './dto/auth.dto';
-import { Public } from '../guards/auth.guard';
 import { AuthenticatedRequest } from '../../shared/types/auth.types';
 
 @ApiTags('Authentication')
@@ -27,7 +26,6 @@ import { AuthenticatedRequest } from '../../shared/types/auth.types';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Public()
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Login user' })
@@ -43,17 +41,16 @@ export class AuthController {
         password: loginDto.password,
       });
 
-      // Set session cookie
-      response.cookie('better-auth.session_token', result.sessionId, {
+      response.cookie('session_token', result.sessionId, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        maxAge: 7 * 24 * 60 * 60 * 1000, 
       });
 
       return {
         message: 'Login successful',
-        user: result.user.toPrimitives(),
+        user: null,
         sessionToken: result.sessionId,
       };
     } catch (error) {
@@ -61,7 +58,6 @@ export class AuthController {
     }
   }
 
-  @Public()
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Register new user' })
@@ -79,17 +75,10 @@ export class AuthController {
         name: registerDto.name,
       });
 
-      // Set session cookie
-      response.cookie('better-auth.session_token', result.sessionId, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      });
 
       return {
         message: 'Registration successful',
-        user: result.user.toPrimitives(),
+        user: null,
         sessionToken: result.sessionId,
       };
     } catch (error) {
@@ -111,22 +100,20 @@ export class AuthController {
   ) {
     const sessionToken = 
       request.session?.id || 
-      request.cookies?.['better-auth.session_token'] ||
+      request.cookies?.['session_token'] ||
       request.headers.authorization?.replace('Bearer ', '');
 
     if (sessionToken) {
       await this.authService.logout(sessionToken);
     }
 
-    // Clear session cookie
-    response.clearCookie('better-auth.session_token');
+    response.clearCookie('session_token');
 
     return {
       message: 'Logout successful',
     };
   }
 
-  @Public()
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Refresh session token' })
@@ -164,7 +151,7 @@ export class AuthController {
   })
   async getCurrentUser(@Req() request: AuthenticatedRequest) {
     return {
-      user: request.user?.toPrimitives(),
+      user: null,
     };
   }
 }

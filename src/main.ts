@@ -7,7 +7,6 @@ import * as cookieParser from 'cookie-parser';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Enable validation globally
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -16,20 +15,17 @@ async function bootstrap() {
     }),
   );
 
-  // Enable cookie parser
   app.use(cookieParser());
 
-  // Enable CORS
   app.enableCors({
-    origin: true, // In production, specify your frontend URL
+    origin: true, 
     credentials: true,
   });
 
-  // Swagger API documentation with Scalar UI
   const config = new DocumentBuilder()
-    .setTitle('NestJS + Better Auth Boilerplate')
+    .setTitle('ClickNVape - API Documentation')
     .setDescription(
-      'A boilerplate API built with NestJS, Better Auth, and Hexagonal Architecture',
+      'API documentation for ClickNVape application built with NestJS',
     )
     .setVersion('1.0')
     .addBearerAuth()
@@ -37,22 +33,20 @@ async function bootstrap() {
 
   const document = SwaggerModule.createDocument(app, config);
   
-  // Set up Swagger documentation
   SwaggerModule.setup('api', app, document, {
     customfavIcon: 'https://avatars.githubusercontent.com/u/11062800?s=32&v=4',
-    customSiteTitle: 'NestJS Better Auth API Documentation',
+    customSiteTitle: 'ClickNVape - API Documentation',
     swaggerOptions: {
       persistAuthorization: true,
     },
   });
 
-  // Create a separate Scalar endpoint
-  app.use('/api/scalar', (req, res) => {
+  app.use('/api/docs', (req, res) => {
     res.send(`
       <!DOCTYPE html>
       <html>
         <head>
-          <title>NestJS Better Auth API - Scalar Documentation</title>
+          <title>ClickNVape - API Documentation</title>
           <meta charset="utf-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1" />
         </head>
