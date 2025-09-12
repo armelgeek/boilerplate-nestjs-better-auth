@@ -15,7 +15,7 @@ import {
   ApiResponse,
   ApiBearerAuth,
 } from '@nestjs/swagger';
-import { UserService } from '../../application/use-cases/user.service';
+import { UserService } from '../../application/services/user.service';
 import { UpdateProfileDto } from './dto/auth.dto';
 import { AuthenticatedRequest } from '../../shared/types/auth.types';
 
@@ -30,7 +30,7 @@ export class UserController {
   @ApiResponse({ status: 200, description: 'User found' })
   @ApiResponse({ status: 404, description: 'User not found' })
   async getUserById(@Param('id') id: string) {
-    const user = await this.userService.getUser({ userId: id });
+    const user = await this.userService.getUserById(id);
 
     if (!user) {
       throw new Error('User not found');

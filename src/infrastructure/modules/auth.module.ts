@@ -1,24 +1,30 @@
 import { Module } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { BetterAuthService } from '../auth/better-auth.service';
 import { AuthController } from '../controllers/auth.controller';
 import { UserController } from '../controllers/user.controller';
 import { AuthGuard } from '../guards/auth.guard';
 import { APP_GUARD } from '@nestjs/core';
-import { UserService } from '../../application/use-cases/user.service';
+import { AuthService } from '../../application/services/auth.service';
+import { UserService } from '../../application/services/user.service';
 import { InMemoryUserRepository } from '../repositories/in-memory-user.repository';
+import { BetterAuthAdapter } from '../auth/better-auth.adapter';
 import { NestLoggerService } from '../services/logger.service';
 
 @Module({
   controllers: [AuthController, UserController],
   providers: [
     Reflector,
-    // Better Auth service
-    BetterAuthService,
     // Infrastructure adapters 
     InMemoryUserRepository,
+    BetterAuthAdapter,
     NestLoggerService,
-    // Application use cases
+    // Application services
+    {
+      provide: AuthService,
+      useFactory: (authRepo, userRepo, logger) => 
+        new AuthService(authRepo, userRepo, logger),
+      inject: [BetterAuthAdapter, InMemoryUserRepository, NestLoggerService],
+    },
     {
       provide: UserService,
       useFactory: (userRepo, logger) => new UserService(userRepo, logger),
@@ -27,11 +33,11 @@ import { NestLoggerService } from '../services/logger.service';
     // Guards
     {
       provide: APP_GUARD,
-      useFactory: (reflector, betterAuthService) =>
-        new AuthGuard(reflector, betterAuthService),
-      inject: [Reflector, BetterAuthService],
+      useFactory: (reflector, authService) =>
+        new AuthGuard(reflector, authService),
+      inject: [Reflector, AuthService],
     },
   ],
-  exports: [BetterAuthService, UserService],
+  exports: [AuthService, UserService],
 })
 export class AuthModule {}

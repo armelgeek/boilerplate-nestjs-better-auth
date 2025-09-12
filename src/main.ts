@@ -25,7 +25,7 @@ async function bootstrap() {
     credentials: true,
   });
 
-  // Swagger API documentation
+  // Swagger API documentation with Scalar UI
   const config = new DocumentBuilder()
     .setTitle('NestJS + Better Auth Boilerplate')
     .setDescription(
@@ -36,13 +36,44 @@ async function bootstrap() {
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document);
+  
+  // Set up Swagger documentation
+  SwaggerModule.setup('api', app, document, {
+    customfavIcon: 'https://avatars.githubusercontent.com/u/11062800?s=32&v=4',
+    customSiteTitle: 'NestJS Better Auth API Documentation',
+    swaggerOptions: {
+      persistAuthorization: true,
+    },
+  });
+
+  // Create a separate Scalar endpoint
+  app.use('/api/scalar', (req, res) => {
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>NestJS Better Auth API - Scalar Documentation</title>
+          <meta charset="utf-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1" />
+        </head>
+        <body>
+          <script
+            id="api-reference"
+            data-url="/api-json"
+            data-configuration='{"theme":"default","layout":"sidebar","showSidebar":true}'
+          ></script>
+          <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference@1.24.24/dist/browser/standalone.min.js"></script>
+        </body>
+      </html>
+    `);
+  });
 
   const port = process.env.PORT || 3000;
   await app.listen(port);
 
   console.log(`🚀 Application is running on: http://localhost:${port}`);
-  console.log(`📚 Swagger documentation: http://localhost:${port}/api`);
+  console.log(`📚 Standard Swagger UI: http://localhost:${port}/api`);
+  console.log(`📚 Scalar API documentation: http://localhost:${port}/api/scalar`);
 }
 
 bootstrap();

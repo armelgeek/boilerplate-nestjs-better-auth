@@ -6,7 +6,6 @@ import {
   HttpStatus,
   Res,
   ValidationPipe,
-  UseGuards,
   Req,
   BadRequestException,
   UnauthorizedException,
@@ -17,8 +16,8 @@ import {
   ApiResponse,
   ApiBearerAuth,
 } from '@nestjs/swagger';
-import { Response, Request } from 'express';
-import { BetterAuthService } from '../auth/better-auth.service';
+import { Response } from 'express';
+import { AuthService } from '../../application/services/auth.service';
 import { LoginDto, RegisterDto, RefreshTokenDto } from './dto/auth.dto';
 import { Public } from '../guards/auth.guard';
 import { AuthenticatedRequest } from '../../shared/types/auth.types';
@@ -26,7 +25,7 @@ import { AuthenticatedRequest } from '../../shared/types/auth.types';
 @ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly betterAuthService: BetterAuthService) {}
+  constructor(private readonly authService: AuthService) {}
 
   @Public()
   @Post('login')
@@ -39,19 +38,13 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response,
   ) {
     try {
-      const result = await this.betterAuthService.signIn(
-        loginDto.email,
-        loginDto.password,
-      );
-
-      if (!result || !result.user || !result.session) {
-        throw new UnauthorizedException('Invalid credentials');
-      }
-
-      const { session, user } = result;
+      const result = await this.authService.login({
+        email: loginDto.email,
+        password: loginDto.password,
+      });
 
       // Set session cookie
-      response.cookie('better-auth.session_token', session.id, {
+      response.cookie('better-auth.session_token', result.sessionId, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
@@ -60,16 +53,8 @@ export class AuthController {
 
       return {
         message: 'Login successful',
-        user: {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          emailVerified: user.emailVerified,
-          image: user.image || null,
-          createdAt: user.createdAt,
-          updatedAt: user.updatedAt,
-        },
-        sessionToken: session.id,
+        user: result.user.toPrimitives(),
+        sessionToken: result.sessionId,
       };
     } catch (error) {
       throw new UnauthorizedException('Invalid credentials');
@@ -88,20 +73,14 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response,
   ) {
     try {
-      const result = await this.betterAuthService.signUp(
-        registerDto.email,
-        registerDto.password,
-        registerDto.name,
-      );
-
-      if (!result || !result.user) {
-        throw new BadRequestException('Registration failed');
-      }
-
-      const { session, user } = result;
+      const result = await this.authService.register({
+        email: registerDto.email,
+        password: registerDto.password,
+        name: registerDto.name,
+      });
 
       // Set session cookie
-      response.cookie('better-auth.session_token', session?.id || '', {
+      response.cookie('better-auth.session_token', result.sessionId, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
@@ -110,16 +89,8 @@ export class AuthController {
 
       return {
         message: 'Registration successful',
-        user: {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          emailVerified: user.emailVerified,
-          image: user.image || null,
-          createdAt: user.createdAt,
-          updatedAt: user.updatedAt,
-        },
-        sessionToken: session?.id || '',
+        user: result.user.toPrimitives(),
+        sessionToken: result.sessionId,
       };
     } catch (error) {
       if (error.message?.includes('email')) {
@@ -144,7 +115,7 @@ export class AuthController {
       request.headers.authorization?.replace('Bearer ', '');
 
     if (sessionToken) {
-      await this.betterAuthService.signOut(sessionToken);
+      await this.authService.logout(sessionToken);
     }
 
     // Clear session cookie
@@ -166,9 +137,7 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response,
   ) {
     try {
-      // Better Auth handles session refresh automatically
-      // We just validate the current session
-      const sessionData = await this.betterAuthService.validateSession(
+      const sessionData = await this.authService.validateSession(
         refreshDto.sessionId,
       );
 
@@ -195,7 +164,7 @@ export class AuthController {
   })
   async getCurrentUser(@Req() request: AuthenticatedRequest) {
     return {
-      user: request.user,
+      user: request.user?.toPrimitives(),
     };
   }
 }

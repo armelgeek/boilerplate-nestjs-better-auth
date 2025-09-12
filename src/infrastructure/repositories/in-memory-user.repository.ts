@@ -1,12 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import { UserRepositoryPort } from '../../application/repositories/outbound.ports';
+import { UserRepository } from '../../domain/interfaces/repositories.interface';
 import { User } from '../../domain/entities/user.entity';
 
 // Shared storage with BetterAuthAdapter
 import { getUserStorage } from '../auth/better-auth.adapter';
 
 @Injectable()
-export class InMemoryUserRepository implements UserRepositoryPort {
+export class InMemoryUserRepository implements UserRepository {
   async findById(id: string): Promise<User | null> {
     const userStorage = getUserStorage();
     const userData = userStorage.get(id);
