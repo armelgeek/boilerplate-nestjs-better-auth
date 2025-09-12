@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { AuthRepository } from '../../application/repositories/outbound.ports';
+import { AuthRepository } from '../../domain/interfaces/repositories.interface';
 import { User } from '../../domain/entities/user.entity';
 import { IdGenerator, PasswordUtils } from '../../shared/utils/common.utils';
 

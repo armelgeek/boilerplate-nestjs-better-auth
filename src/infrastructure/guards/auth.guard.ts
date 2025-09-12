@@ -6,7 +6,7 @@ import {
   SetMetadata,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { BetterAuthService } from '../auth/better-auth.service';
+import { AuthService } from '../../application/services/auth.service';
 
 export const IS_PUBLIC_KEY = 'isPublic';
 export const Public = () => SetMetadata(IS_PUBLIC_KEY, true);
@@ -15,7 +15,7 @@ export const Public = () => SetMetadata(IS_PUBLIC_KEY, true);
 export class AuthGuard implements CanActivate {
   constructor(
     private reflector: Reflector,
-    private betterAuthService: BetterAuthService,
+    private authService: AuthService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -36,24 +36,15 @@ export class AuthGuard implements CanActivate {
     }
 
     try {
-      const sessionData = await this.betterAuthService.validateSession(sessionToken);
-      if (!sessionData) {
+      const user = await this.authService.validateSession(sessionToken);
+      if (!user) {
         throw new UnauthorizedException('Invalid session');
       }
 
       // Attach user to request for use in controllers
-      request.user = {
-        id: sessionData.user.id,
-        email: sessionData.user.email,
-        name: sessionData.user.name,
-        emailVerified: sessionData.user.emailVerified,
-        image: sessionData.user.image,
-        createdAt: sessionData.user.createdAt,
-        updatedAt: sessionData.user.updatedAt,
-      };
-
+      request.user = user;
       request.session = { 
-        id: sessionData.session.id,
+        id: sessionToken,
       };
 
       return true;

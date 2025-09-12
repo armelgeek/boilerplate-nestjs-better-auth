@@ -1,4 +1,5 @@
 import { Request } from 'express';
+import { User } from '../../domain/entities/user.entity';
 
 export interface SessionUser {
   id: string;
@@ -23,6 +24,6 @@ export interface AuthContext {
 }
 
 export type AuthenticatedRequest = Request & {
-  user?: SessionUser;
-  session?: AuthSession;
+  user?: User;
+  session?: { id: string };
 };
