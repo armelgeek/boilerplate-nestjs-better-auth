@@ -1,27 +1,25 @@
-# NestJS + Drizzle ORM Boilerplate with Hexagonal Architecture
+# ClickNVape Backend
 
-A production-ready backend boilerplate that integrates **NestJS**, **Drizzle ORM**, and **Hexagonal Architecture** (Ports & Adapters pattern) to provide a clean, maintainable, and testable foundation for authentication-enabled APIs.
+A production-ready backend application built with **NestJS**, **Drizzle ORM**, and **Hexagonal Architecture** (Ports & Adapters pattern) to provide a clean, maintainable, and testable foundation for the ClickNVape platform with authentication-enabled APIs.
 
 ## 🏗️ Architecture
 
-This boilerplate follows the **Hexagonal Architecture** pattern with clear separation of concerns:
+This application follows the **Hexagonal Architecture** pattern with clear separation of concerns:
 
 ```
 src/
 ├── domain/                  # Business logic and entities
 │   ├── entities/           # Domain entities (User)
-│   ├── services/           # Domain services  
-│   └── value-objects/      # Value objects (Email, UserId)
-├── application/            # Application use cases and ports
-│   ├── ports/              # Interfaces (inbound/outbound)
-│   └── use-cases/          # Application services
+│   └── interfaces/         # Repository interfaces
+├── application/            # Application services
+│   └── services/           # Application use case services
 ├── infrastructure/         # External adapters and frameworks
-│   ├── database/          # Drizzle ORM configuration and schemas
-│   ├── controllers/       # NestJS REST controllers
-│   ├── guards/            # Authentication guards
-│   ├── modules/           # NestJS modules
-│   ├── repositories/      # Data persistence adapters
-│   └── services/          # Infrastructure services
+│   ├── auth/               # Authentication repositories
+│   ├── controllers/        # NestJS REST controllers
+│   ├── database/           # Drizzle ORM configuration and schemas
+│   ├── modules/            # NestJS modules
+│   ├── repositories/       # Data persistence adapters
+│   └── services/           # Infrastructure services
 └── shared/                # Shared utilities and types
     ├── errors/            # Domain errors
     ├── types/             # Type definitions
@@ -30,10 +28,10 @@ src/
 
 ## ✨ Features
 
-- **🔐 Authentication System**: Complete auth flow with session-based authentication
+- **🔐 Authentication System**: Complete auth flow with session-based authentication and Drizzle ORM
 - **🏛️ Hexagonal Architecture**: Clean separation of domain, application, and infrastructure layers
-- **🗄️ Drizzle ORM**: Type-safe database operations with SQLite
-- **🛡️ Protected Routes**: Session-based authentication with guards
+- **🗄️ Drizzle ORM**: Type-safe database operations with SQL databases
+- **🛡️ Protected Routes**: Session-based authentication with database persistence
 - **📝 API Documentation**: Auto-generated Swagger/OpenAPI docs
 - **🧪 Type Safety**: Full TypeScript support with strict typing
 - **🔧 Production Ready**: Error handling, logging, and validation
@@ -51,7 +49,7 @@ src/
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
-   cd boilerplate-nestjs-better-auth
+   cd ClickNVape-backend
    ```
 
 2. **Install dependencies**
@@ -145,9 +143,9 @@ curl -X PUT "http://localhost:3000/users/profile" \
 - **DTOs** for data transfer between layers
 
 ### Infrastructure Layer
-- **Adapters** that implement ports (Better Auth, repositories)
+- **Adapters** that implement repository interfaces (Drizzle Auth, repositories)
 - **Controllers** that handle HTTP requests
-- **Guards** for authentication and authorization
+- **Database** integration with Drizzle ORM
 - **External services** integration
 
 ## 🔌 Drizzle ORM Integration
