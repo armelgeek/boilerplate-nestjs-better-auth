@@ -1,27 +1,25 @@
-# Documentation Index
+# ClickNVape Backend Documentation
 
-Welcome to the NestJS Better Auth Boilerplate documentation.
+Welcome to the ClickNVape Backend documentation.
 
 ## Quick Links
 
 - [Getting Started](getting-started.md) - Setup and installation guide
 - [Architecture](architecture.md) - Detailed architecture documentation  
-- [API Reference](api.md) - API endpoints and usage
 
 ## What's This Project?
 
-This is a NestJS boilerplate project that implements authentication using Better Auth with a simplified hexagonal architecture. It provides a solid foundation for building scalable web applications with clean architecture principles.
+This is the ClickNVape backend application built with NestJS that implements authentication using Drizzle ORM with a simplified hexagonal architecture. It provides a solid foundation for the ClickNVape platform with clean architecture principles.
 
 ## Key Features
 
 - **NestJS Framework**: Modern Node.js framework with TypeScript support
-- **Better Auth Integration**: Robust authentication system
+- **Drizzle ORM Integration**: Type-safe database operations with SQL databases
 - **Hexagonal Architecture**: Clean architecture with clear separation of concerns
-- **Simplified Design**: Removed complex value objects for easier maintenance
+- **Simplified Design**: Streamlined interfaces for easier maintenance
 - **Repository Pattern**: Interface-based data access layer
-- **Session Management**: Secure session-based authentication
+- **Session Management**: Secure session-based authentication with database persistence
 - **TypeScript**: Full type safety throughout the application
-- **Docker Support**: Containerized deployment ready
 
 ## Architecture Overview
 
@@ -30,18 +28,18 @@ The project follows a simplified hexagonal architecture with these layers:
 ```
 src/
 ├── domain/                  # Business logic and entities
-├── application/            # Use cases and repository interfaces  
+├── application/            # Application services  
 ├── infrastructure/         # External adapters and frameworks
 └── shared/                # Shared utilities and types
 ```
 
-## Recent Changes
+## Recent Architecture
 
-This boilerplate has been refactored to:
-- Remove value objects for simplicity
-- Rename "ports" to "repositories" for clarity
-- Use primitive types (string) instead of complex value objects
-- Maintain clean architecture principles while reducing complexity
+This ClickNVape backend has been built with:
+- Simplified repository interfaces for clarity
+- Application services pattern instead of complex use cases
+- Drizzle ORM for type-safe database operations
+- Clean hexagonal architecture principles with reduced complexity
 
 ## Getting Started
 

@@ -2,7 +2,7 @@
 
 ## Overview
 
-This NestJS boilerplate follows a simplified hexagonal (clean) architecture pattern with Better Auth integration. The architecture emphasizes separation of concerns and maintainability while keeping complexity to a minimum.
+This ClickNVape backend application follows a simplified hexagonal (clean) architecture pattern with Drizzle ORM integration. The architecture emphasizes separation of concerns and maintainability while keeping complexity to a minimum.
 
 ## Project Structure
 
@@ -10,17 +10,16 @@ This NestJS boilerplate follows a simplified hexagonal (clean) architecture patt
 src/
 ├── domain/                  # Business logic and entities
 │   ├── entities/           # Domain entities (User)
-│   └── services/           # Domain services  
-├── application/            # Application use cases and repositories
-│   ├── repositories/       # Repository interfaces (inbound/outbound)
-│   └── use-cases/          # Application services
+│   └── interfaces/         # Repository interfaces
+├── application/            # Application services
+│   └── services/           # Application use case services
 ├── infrastructure/         # External adapters and frameworks
-│   ├── auth/              # Better Auth adapter
-│   ├── controllers/       # NestJS REST controllers
-│   ├── guards/            # Authentication guards
-│   ├── modules/           # NestJS modules
-│   ├── repositories/      # Data persistence adapters
-│   └── services/          # Infrastructure services
+│   ├── auth/               # Authentication repositories
+│   ├── controllers/        # NestJS REST controllers
+│   ├── database/           # Drizzle ORM configuration and schemas
+│   ├── modules/            # NestJS modules
+│   ├── repositories/       # Data persistence adapters
+│   └── services/           # Infrastructure services
 └── shared/                # Shared utilities and types
     ├── errors/            # Domain errors
     ├── types/             # Type definitions
@@ -44,22 +43,9 @@ The domain layer contains the core business logic and entities.
 
 ### 2. Application Layer (`src/application/`)
 
-The application layer orchestrates business operations and defines interfaces.
+The application layer orchestrates business operations and contains application services.
 
-#### Repositories (`src/application/repositories/`)
-Contains interface definitions for external dependencies:
-
-- **inbound.ports.ts**: Defines use case interfaces
-  - `AuthUseCases`: Authentication operations
-  - `UserUseCases`: User management operations
-
-- **outbound.ports.ts**: Defines repository and service interfaces
-  - `AuthRepository`: Authentication data operations
-  - `UserRepositoryPort`: User data operations
-  - `EmailServicePort`: Email operations
-  - `LoggerPort`: Logging operations
-
-#### Use Cases (`src/application/use-cases/`)
+#### Services (`src/application/services/`)
 - **AuthService**: Handles authentication flows (login, register, logout, refresh)
 - **UserService**: Manages user operations (get user, update profile)
 
@@ -68,29 +54,31 @@ Contains interface definitions for external dependencies:
 The infrastructure layer implements external concerns and adapters.
 
 #### Auth (`src/infrastructure/auth/`)
-- **BetterAuthAdapter**: Implements `AuthRepository` interface
+- **DrizzleAuthRepository**: Implements `AuthRepository` interface
 - Handles user creation, password verification, session management
-- Uses in-memory storage for demo purposes
+- Uses Drizzle ORM with database persistence
+
+#### Database (`src/infrastructure/database/`)
+- **connection.ts**: Database connection configuration
+- **schema.ts**: Drizzle ORM schema definitions for users and sessions
 
 #### Controllers (`src/infrastructure/controllers/`)
 - **AuthController**: REST endpoints for authentication
 - **UserController**: REST endpoints for user management
 - **DTOs**: Data Transfer Objects for API requests/responses
 
-#### Guards (`src/infrastructure/guards/`)
-- **AuthGuard**: NestJS guard for route protection
-- Validates sessions and attaches user to request
+
 
 #### Modules (`src/infrastructure/modules/`)
 - **AuthModule**: NestJS module configuration
 - Configures dependency injection and providers
 
 #### Repositories (`src/infrastructure/repositories/`)
-- **InMemoryUserRepository**: Implements `UserRepositoryPort`
-- In-memory implementation for demo purposes
+- **DrizzleUserRepository**: Implements `UserRepository` interface
+- Drizzle ORM implementation for user data persistence
 
 #### Services (`src/infrastructure/services/`)
-- **LoggerService**: Implements `LoggerPort`
+- **LoggerService**: Implements `Logger` interface
 - Provides logging functionality
 
 ### 4. Shared Layer (`src/shared/`)
@@ -122,8 +110,8 @@ Contains common utilities and types used across layers.
 
 ### 4. Authentication Strategy
 - **Session-based**: Uses session tokens for authentication
-- **Better Auth Integration**: Integrates with Better Auth library
-- **Flexible Token Extraction**: Supports both Bearer tokens and cookies
+- **Drizzle ORM Integration**: Database-backed authentication with Drizzle ORM
+- **Token-based Access**: Supports Bearer token authentication
 
 ### 5. Error Handling
 - **Domain Errors**: Business logic errors thrown from domain layer
@@ -142,10 +130,10 @@ Contains common utilities and types used across layers.
 
 ### User Management Flow
 1. Client sends request to `UserController`
-2. `AuthGuard` validates session and attaches user to request
+2. Authentication middleware validates session and attaches user to request
 3. Controller calls appropriate `UserService` method
 4. `UserService` orchestrates domain operations
-5. `UserRepositoryPort` handles data persistence
+5. `UserRepository` handles data persistence with Drizzle ORM
 6. Response returned to client
 
 ## Testing Strategy
@@ -158,7 +146,7 @@ Contains common utilities and types used across layers.
 ## Deployment Considerations
 
 - **Environment Configuration**: Use environment variables for different environments
-- **Database Migration**: Replace in-memory storage with proper database
-- **Security**: Implement proper password hashing and session security
+- **Database**: Uses Drizzle ORM with SQL database (SQLite/PostgreSQL)
+- **Security**: Implements proper password hashing and session security with database persistence
 - **Monitoring**: Add comprehensive logging and monitoring
-- **Scalability**: Consider horizontal scaling for session storage
+- **Scalability**: Database-backed session storage supports horizontal scaling

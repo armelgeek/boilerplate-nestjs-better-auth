@@ -11,7 +11,7 @@
 1. Clone the repository:
 ```bash
 git clone <repository-url>
-cd boilerplate-nestjs-better-auth
+cd ClickNVape-backend
 ```
 
 2. Install dependencies:
@@ -30,12 +30,11 @@ cp .env.example .env
 NODE_ENV=development
 PORT=3000
 
-# Database (when implemented)
-DATABASE_URL=your-database-url
+# Database Configuration
+DATABASE_URL=database.db
 
-# Better Auth Configuration
-BETTER_AUTH_SECRET=your-secret-key-here
-BETTER_AUTH_URL=http://localhost:3000
+# ClickNVape Authentication
+AUTH_SECRET=your-secret-key-here
 ```
 
 ## Development
@@ -122,17 +121,7 @@ curl -X GET http://localhost:3000/user/USER_ID \
   -H "Authorization: Bearer YOUR_SESSION_TOKEN"
 ```
 
-## Docker Support
 
-### Build Docker Image
-```bash
-docker build -t nestjs-better-auth .
-```
-
-### Run with Docker Compose
-```bash
-docker-compose up
-```
 
 ## Project Structure
 
@@ -154,9 +143,9 @@ docker-compose up
 
 ## Next Steps
 
-1. **Database Integration**: Replace in-memory storage with a proper database (PostgreSQL, MongoDB, etc.)
-2. **Email Service**: Implement email verification and password reset
-3. **File Upload**: Add profile image upload functionality
+1. **Database Configuration**: Configure your database connection in the .env file
+2. **Email Service**: Implement email verification and password reset (if needed)
+3. **File Upload**: Add profile image upload functionality (if needed)
 4. **Role-Based Access**: Implement user roles and permissions
 5. **API Documentation**: Set up Swagger/OpenAPI documentation
 6. **Monitoring**: Add logging, metrics, and health checks
