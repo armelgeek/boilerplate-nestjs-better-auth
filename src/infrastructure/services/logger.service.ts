@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { LoggerPort } from '../../application/ports/outbound.ports';
+import { LoggerPort } from '../../application/repositories/outbound.ports';
 
 @Injectable()
 export class NestLoggerService implements LoggerPort {

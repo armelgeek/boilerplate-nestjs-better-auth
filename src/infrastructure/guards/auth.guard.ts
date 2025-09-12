@@ -43,8 +43,8 @@ export class AuthGuard implements CanActivate {
 
       // Attach user to request for use in controllers
       request.user = {
-        id: user.id.value,
-        email: user.email.value,
+        id: user.id,
+        email: user.email,
         name: user.name,
         emailVerified: user.emailVerified,
         image: user.image,

@@ -1,29 +1,22 @@
 import { Injectable } from '@nestjs/common';
-import { UserRepositoryPort } from '../../application/ports/outbound.ports';
+import { UserRepositoryPort } from '../../application/repositories/outbound.ports';
 import { User } from '../../domain/entities/user.entity';
-import { Email } from '../../domain/value-objects/email.vo';
-import { UserId } from '../../domain/value-objects/user-id.vo';
-import { UserIdVO } from '../../domain/value-objects/user-id.vo';
-import { EmailVO } from '../../domain/value-objects/email.vo';
 
 // Shared storage with BetterAuthAdapter
 import { getUserStorage } from '../auth/better-auth.adapter';
 
 @Injectable()
 export class InMemoryUserRepository implements UserRepositoryPort {
-  async findById(id: UserId): Promise<User | null> {
+  async findById(id: string): Promise<User | null> {
     const userStorage = getUserStorage();
-    const userData = userStorage.get(id.value);
+    const userData = userStorage.get(id);
     if (!userData) {
       return null;
     }
 
-    const userIdVO = new UserIdVO(userData.id);
-    const emailVO = new EmailVO(userData.email);
-
     return User.fromPersistence({
-      id: userIdVO,
-      email: emailVO,
+      id: userData.id,
+      email: userData.email,
       name: userData.name,
       createdAt: userData.createdAt,
       updatedAt: userData.updatedAt,
@@ -32,21 +25,18 @@ export class InMemoryUserRepository implements UserRepositoryPort {
     });
   }
 
-  async findByEmail(email: Email): Promise<User | null> {
+  async findByEmail(email: string): Promise<User | null> {
     const userStorage = getUserStorage();
     const userEntries = Array.from(userStorage.values());
-    const userData = userEntries.find((u) => u.email === email.value);
+    const userData = userEntries.find((u) => u.email === email);
 
     if (!userData) {
       return null;
     }
 
-    const userIdVO = new UserIdVO(userData.id);
-    const emailVO = new EmailVO(userData.email);
-
     return User.fromPersistence({
-      id: userIdVO,
-      email: emailVO,
+      id: userData.id,
+      email: userData.email,
       name: userData.name,
       createdAt: userData.createdAt,
       updatedAt: userData.updatedAt,
@@ -58,22 +48,22 @@ export class InMemoryUserRepository implements UserRepositoryPort {
   async save(user: User): Promise<User> {
     const userStorage = getUserStorage();
     const userData = {
-      id: user.id.value,
-      email: user.email.value,
+      id: user.id,
+      email: user.email,
       name: user.name,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
       emailVerified: user.emailVerified,
       image: user.image,
-      password: userStorage.get(user.id.value)?.password || '', // Keep existing password
+      password: userStorage.get(user.id)?.password || '', // Keep existing password
     };
 
-    userStorage.set(user.id.value, userData);
+    userStorage.set(user.id, userData);
     return user;
   }
 
-  async delete(id: UserId): Promise<void> {
+  async delete(id: string): Promise<void> {
     const userStorage = getUserStorage();
-    userStorage.delete(id.value);
+    userStorage.delete(id);
   }
 }
