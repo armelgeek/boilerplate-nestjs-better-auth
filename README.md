@@ -1,27 +1,30 @@
 # ClickNVape Backend
 
-A production-ready backend application built with **NestJS**, **Drizzle ORM**, and **Hexagonal Architecture** (Ports & Adapters pattern) to provide a clean, maintainable, and testable foundation for the ClickNVape platform with authentication-enabled APIs.
+A production-ready backend application built with **NestJS** and **Drizzle ORM** following a **simple, clean architecture** to provide a maintainable and testable foundation for the ClickNVape platform with authentication-enabled APIs.
 
 ## 🏗️ Architecture
 
-This application follows the **Hexagonal Architecture** pattern with clear separation of concerns:
+This application follows a **simple NestJS architecture** with clear separation of concerns:
 
 ```
 src/
-├── domain/                  # Business logic and entities
-│   ├── entities/           # Domain entities (User)
-│   └── interfaces/         # Repository interfaces
-├── application/            # Application services
-│   └── services/           # Application use case services
-├── infrastructure/         # External adapters and frameworks
-│   ├── auth/               # Authentication repositories
-│   ├── controllers/        # NestJS REST controllers
-│   ├── database/           # Drizzle ORM configuration and schemas
-│   ├── modules/            # NestJS modules
-│   ├── repositories/       # Data persistence adapters
-│   └── services/           # Infrastructure services
-└── shared/                # Shared utilities and types
-    ├── errors/            # Domain errors
+├── main.ts                   # Application entry point
+├── app.module.ts            # Root application module
+├── auth/                    # Authentication module
+│   ├── auth.module.ts      # Auth module configuration
+│   ├── auth.service.ts     # Auth business logic
+│   ├── auth.controller.ts  # Auth HTTP endpoints
+│   └── dto/                # Auth data transfer objects
+├── user/                    # User management module
+│   ├── user.module.ts      # User module configuration
+│   ├── user.service.ts     # User business logic
+│   ├── user.controller.ts  # User HTTP endpoints
+│   ├── user.entity.ts      # User entity interface
+│   └── dto/                # User data transfer objects
+├── database/               # Database configuration
+│   ├── schema.ts          # Drizzle database schema
+│   └── connection.ts      # Database connection setup
+└── common/                # Shared utilities
     ├── types/             # Type definitions
     └── utils/             # Common utilities
 ```
@@ -29,7 +32,7 @@ src/
 ## ✨ Features
 
 - **🔐 Authentication System**: Complete auth flow with session-based authentication and Drizzle ORM
-- **🏛️ Hexagonal Architecture**: Clean separation of domain, application, and infrastructure layers
+- **🏛️ Simple Architecture**: Clean, straightforward NestJS structure without over-engineering
 - **🗄️ Drizzle ORM**: Type-safe database operations with SQL databases
 - **🛡️ Protected Routes**: Session-based authentication with database persistence
 - **📝 API Documentation**: Auto-generated Swagger/OpenAPI docs
@@ -131,22 +134,20 @@ curl -X PUT "http://localhost:3000/users/profile" \
 
 ## 🏗️ Architecture Principles
 
-### Domain Layer
-- **Pure business logic** with no external dependencies
-- **Domain entities** like `User` with encapsulated behavior
-- **Value objects** for type safety (`Email`, `UserId`)
-- **Domain services** for business rules
+### Service Layer
+- **Business logic** encapsulated in NestJS services
+- **Direct database access** through Drizzle ORM
+- **Type-safe operations** with TypeScript interfaces
 
-### Application Layer
-- **Use cases** that orchestrate domain objects
-- **Ports** (interfaces) that define contracts with external systems
-- **DTOs** for data transfer between layers
+### Controller Layer
+- **HTTP request handling** with NestJS controllers
+- **Request validation** using DTOs and class-validator
+- **Response formatting** for consistent API responses
 
-### Infrastructure Layer
-- **Adapters** that implement repository interfaces (Drizzle Auth, repositories)
-- **Controllers** that handle HTTP requests
-- **Database** integration with Drizzle ORM
-- **External services** integration
+### Database Layer
+- **Drizzle ORM** for type-safe database operations
+- **Schema definitions** with proper relations and constraints
+- **Session management** with database persistence
 
 ## 🔌 Drizzle ORM Integration
 
@@ -169,32 +170,36 @@ The implementation includes:
 
 ### Technical Implementation
 
-The Drizzle integration follows the repository pattern:
+The simplified architecture follows standard NestJS patterns:
 
 ```typescript
-// Drizzle Repository
+// Service with direct database access
 @Injectable()
-export class DrizzleAuthRepository implements AuthRepository {
-  async createUser(email: string, password: string, name: string) {
-    const hashedPassword = await PasswordUtils.hash(password);
+export class AuthService {
+  async login(loginData: LoginDto): Promise<AuthResult> {
+    // Find user by email
+    const userResult = await db.select().from(users)
+      .where(eq(users.email, loginData.email)).limit(1);
     
-    await db.insert(users).values({
-      id: userId,
-      email,
-      name,
-      password: hashedPassword,
-      emailVerified: false,
-    });
+    if (userResult.length === 0) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
 
-    return user;
+    const user = userResult[0];
+    // Verify password and create session...
+    return { user, sessionId };
   }
 
-  async validateSession(sessionId: string) {
-    const sessionResult = await db.select()
-      .from(sessions)
-      .where(eq(sessions.id, sessionId))
-      .limit(1);
-    // Returns user and session data for valid sessions
+  private async createSession(userId: string): Promise<string> {
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7);
+
+    const sessionResult = await db.insert(sessions).values({
+      userId,
+      expiresAt,
+    }).returning();
+
+    return sessionResult[0].id;
   }
 }
 ```
