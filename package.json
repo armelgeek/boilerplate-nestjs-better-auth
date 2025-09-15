@@ -52,10 +52,10 @@
   "keywords": [
     "nestjs",
     "drizzle-orm",
-    "hexagonal-architecture",
     "authentication",
     "boilerplate",
-    "typescript"
+    "typescript",
+    "simple-architecture"
   ],
   "author": "",
   "license": "MIT"

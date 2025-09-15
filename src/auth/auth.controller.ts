@@ -16,10 +16,9 @@ import {
   ApiResponse,
   ApiBearerAuth,
 } from '@nestjs/swagger';
-import { Response } from 'express';
-import { AuthService } from '../../application/services/auth.service';
+import { Response, Request } from 'express';
+import { AuthService } from './auth.service';
 import { LoginDto, RegisterDto, RefreshTokenDto } from './dto/auth.dto';
-import { AuthenticatedRequest } from '../../shared/types/auth.types';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -45,12 +44,18 @@ export class AuthController {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
-        maxAge: 7 * 24 * 60 * 60 * 1000, 
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       });
 
       return {
         message: 'Login successful',
-        user: null,
+        user: {
+          id: result.user.id,
+          email: result.user.email,
+          name: result.user.name,
+          emailVerified: result.user.emailVerified,
+          image: result.user.image,
+        },
         sessionToken: result.sessionId,
       };
     } catch (error) {
@@ -75,14 +80,26 @@ export class AuthController {
         name: registerDto.name,
       });
 
+      response.cookie('session_token', result.sessionId, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      });
 
       return {
         message: 'Registration successful',
-        user: null,
+        user: {
+          id: result.user.id,
+          email: result.user.email,
+          name: result.user.name,
+          emailVerified: result.user.emailVerified,
+          image: result.user.image,
+        },
         sessionToken: result.sessionId,
       };
     } catch (error) {
-      if (error.message?.includes('email')) {
+      if (error.message?.includes('Email already exists')) {
         throw new BadRequestException('Email already exists');
       }
       throw new BadRequestException('Registration failed');
@@ -95,11 +112,10 @@ export class AuthController {
   @ApiOperation({ summary: 'Logout user' })
   @ApiResponse({ status: 200, description: 'User logged out successfully' })
   async logout(
-    @Req() request: AuthenticatedRequest,
+    @Req() request: Request,
     @Res({ passthrough: true }) response: Response,
   ) {
     const sessionToken = 
-      request.session?.id || 
       request.cookies?.['session_token'] ||
       request.headers.authorization?.replace('Bearer ', '');
 
@@ -124,17 +140,18 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response,
   ) {
     try {
-      const sessionData = await this.authService.validateSession(
-        refreshDto.sessionId,
-      );
+      const newSessionId = await this.authService.refreshToken(refreshDto.sessionId);
 
-      if (!sessionData) {
-        throw new UnauthorizedException('Invalid session');
-      }
+      response.cookie('session_token', newSessionId, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      });
 
       return {
-        message: 'Session is valid',
-        sessionToken: refreshDto.sessionId,
+        message: 'Token refreshed successfully',
+        sessionToken: newSessionId,
       };
     } catch (error) {
       throw new UnauthorizedException('Invalid session');
@@ -149,9 +166,29 @@ export class AuthController {
     status: 200,
     description: 'User information retrieved successfully',
   })
-  async getCurrentUser(@Req() request: AuthenticatedRequest) {
+  async getCurrentUser(@Req() request: Request) {
+    const sessionToken = 
+      request.cookies?.['session_token'] ||
+      request.headers.authorization?.replace('Bearer ', '');
+
+    if (!sessionToken) {
+      throw new UnauthorizedException('No session token provided');
+    }
+
+    const user = await this.authService.validateSession(sessionToken);
+
+    if (!user) {
+      throw new UnauthorizedException('Invalid session');
+    }
+
     return {
-      user: null,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        emailVerified: user.emailVerified,
+        image: user.image,
+      },
     };
   }
 }

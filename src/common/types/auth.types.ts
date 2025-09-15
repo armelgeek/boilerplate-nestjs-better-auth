@@ -1,5 +1,5 @@
 import { Request } from 'express';
-import { User } from '../../domain/entities/user.entity';
+import { User } from '../../user/user.entity';
 
 export interface SessionUser {
   id: string;
